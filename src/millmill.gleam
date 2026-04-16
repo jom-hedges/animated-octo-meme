@@ -71,3 +71,14 @@ fn parse_route(uri: Uri) -> Route {
   }
 }
 
+fn href(route: Route) -> Attribute(message) {
+  let url = case route {
+    Index -> "/"
+    Experience -> "/experience"
+    Posts -> "/posts"
+    PostById(post_id) -> "/post/" <> int.to_string(post_id)
+    NotFound(_) -> "/404"
+  }
+  
+  attribute.href(url)
+}  
