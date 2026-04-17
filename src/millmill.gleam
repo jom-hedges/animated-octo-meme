@@ -3,9 +3,10 @@ import gleam/int
 import gleam/list
 import gleam/uri.{type Uri}
 import lustre
+import lustre/attribute.{type Attribute}
+import lustre/effect.{type Effect}
 import lustre/element.{type Element}
 import lustre/element/html
-import lustre/event
 
 import modem
 
@@ -82,3 +83,43 @@ fn href(route: Route) -> Attribute(message) {
   
   attribute.href(url)
 }  
+
+fn init(_) -> #(Route, Effect(Msg)) {
+  // Modem stores the first route, so 
+  // it can be stored for app's initial route.
+  let route =
+    modem.initial_uri() {
+      Ok(uri) -> parse_route(uri)
+      Error(_) -> Index
+  }
+
+  let posts =
+    posts
+    |> list.map(fn(post) { #(post.id, post) })
+    |> dict.from_list
+
+  let model = Model(route:, posts:)
+
+  let effect =
+    modem.init(fn(uri) {
+      uri
+      |> parse_route
+      |> UserNavigatedTo
+      
+    })
+
+  #(model, effect)
+} 
+
+// UPDATE ------------------------------------
+type Message {
+  UserNavigatedTo(route: Route)
+}
+
+fn update(model: Model, message: Message) -> #(Model, Effect(Message)) {
+  case message {
+    UserNavigatedTo(route:) -> #(Model(..model, route:), effect,none())
+  }
+}
+
+// VIEW --------------------------------------
